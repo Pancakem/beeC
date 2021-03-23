@@ -7,7 +7,7 @@
 enum node_kind {
       nd_add,
       nd_sub,
-      nd_mul
+      nd_mul,
       nd_div,
       nd_eq,
       nd_ne,
@@ -22,7 +22,7 @@ enum node_kind {
       nd_for,
       nd_sizeof,
       nd_block,
-      nd_fun_call,
+      nd_func_call,
       nd_expr_stmt,
       nd_var,
       nd_num,
@@ -37,14 +37,14 @@ enum type_kind {
 };
 
 struct typ {
-  type_kind kind;
-  typ *base;
+  enum type_kind kind;
+  struct typ *base;
   int array_size;
 };
 
 struct va {
   char *name;
-  typ *ty;
+  struct typ *ty;
   bool is_local;
   char *contents;
   int content_length;
@@ -52,39 +52,39 @@ struct va {
 };
 
 struct var_list {
-  var_list *next;
-  va *v;
+  struct var_list *next;
+  struct va *v;
 };
 
 struct node {
-  node_kind kind;
-  node *next;
-  typ *ty;
-  token *tok;
-  node *lhs;
-  node *rhs;
-  node *cond;
-  node *then;
-  node *els;
-  node *init;
-  node *inc;
-  node *body;
+  enum node_kind kind;
+  struct node *next;
+  struct typ *ty;
+  struct token *tok;
+  struct node *lhs;
+  struct node *rhs;
+  struct node *cond;
+  struct node *then;
+  struct node *els;
+  struct node *init;
+  struct node *inc;
+  struct node *body;
   char *funcname;
-  node *args;
-  va *v;
+  struct node *args;
+  struct va *v;
   int val;
 };
 
 struct fun {
-  fun *next;
+  struct fun *next;
   char *name;
-  var_list *params;
-  node *node;
-  var_list *locals;
+  struct var_list *params;
+  struct node *node;
+  struct var_list *locals;
   int stack_size;
 };
 
 struct program {
-  var_list *globals;
-  fun *fns;
+  struct var_list *globals;
+  struct fun *fns;
 };

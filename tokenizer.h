@@ -12,7 +12,7 @@ enum token_kind {
 
 struct token {
   enum token_kind kind;
-  token *next;
+  struct token *next;
   int val;
   char* str;
   int len;
