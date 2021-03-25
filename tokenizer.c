@@ -3,15 +3,11 @@
 
 #include "tokenizer.h"
 
-token *t;
-char *filename = "";
-char *inpt = "";
-
 void error_at(char *loc, char *f){
-  auto k = inpt;
+  char *k = inpt;
   int line = 1;
   char *buf = (char *)malloc(sizeof(char) * 50);
-  for((sizeof(k) / sizeof(char)) > 0) {
+  while((sizeof(k) / sizeof(char)) > 0) {
     if(k[0] == '\n') {
       if ((sizeof(k) / sizeof(char)) <= ((sizeof(loc) / sizeof(char)) + 2))
 	break;
@@ -27,7 +23,7 @@ void error_at(char *loc, char *f){
 
   printf("%s:%d", filename, line);
 
-  auto p = sizeof(buf) / sizeof(char);
+  int p = sizeof(buf) / sizeof(char);
   printf("%s", buf);
   printf("%*s", p, "");
   printf("^ ");  
@@ -42,15 +38,15 @@ void error_tok(struct token *tok, char *f){
 }
 
 bool peek(char *s) {
-  if(t.kind != tk_reserved)
+  if(t->kind != tk_reserved)
     return false;
   
-  if ((sizeof(s) / sizeof(char)) != t.len)
+  if ((sizeof(s) / sizeof(char)) != t->len)
     return false;
 
   char test_str[t->len];
   memcpy(test_str, t->str, t->len);
-  if (memcmp(teststr, s, t->len) != 0)
+  if (memcmp(test_str, s, t->len) != 0)
     return false;
 
   return true;  
@@ -60,14 +56,14 @@ struct token *consume(char *op) {
   if (!peek(op))
     return NULL;
 
-  token* tt = t;
-  t = t.next;
+  struct token* tt = t;
+  t = t->next;
   return tt;
 }
 
 void expect(char *op) {
   if(!peek(op)) {
-    char s[30];
+    char s[11 + strlen(op)];
     sprintf(s, "unexpected '%s'", op);
     error_tok(t, s);
   }
@@ -77,14 +73,14 @@ void expect(char *op) {
 int expect_number() {
   if (t->kind != tk_num) error_tok(t, "expected a number");
 
-  auto v = t->val;
+  int v = t->val;
   t = t->next;
   return v;
 }
 
 char *expect_ident() {
   if(t->kind != tk_ident) error_tok(t, "expected an identifier");
-  char s[t->len];
+  char *s = (char *)malloc(sizeof(char) * t->len);
   memcpy(s, t->str, t->len);
   t = t->next;
   return s; 
@@ -95,10 +91,9 @@ bool at_eof() {
 }
 
 struct token* new_token(enum token_kind k, struct token *cur, char *str, int len ){
-  struct token *p = (struct token *)malloc(sizeof(struct token));
-  p = (struct token*) {.kind = k, .str = str, .len = len };
-  cur->next = p;
-  return p;
+  struct token p = {.kind = k, .str = str, .len = len };;
+  cur->next = &p;
+  return &p;
 }
 
 bool starts_with(char *str, char *op) {
@@ -106,12 +101,8 @@ bool starts_with(char *str, char *op) {
   return memcmp(str, op, strlen(op));
 }
 
-bool is_digit(char c) {
-  return c >= '0' && c <= '9';  
-}
-
 char *starts_with_reserved(char *str) {
-  char kws[][] = { "if",
+  char *kws[] = { "if",
 		  "else",
 		  "while",
 		  "for",
@@ -122,10 +113,10 @@ char *starts_with_reserved(char *str) {
 
   for(int i = 0; i < 8; ++i) {
     int len = strlen(kws[i]);
-    if ((starts_with(str, kws[i])) && !is_al_num(str[len])) return kws[i];
+    if ((starts_with(str, kws[i])) && !isalnum(str[len])) return kws[i];
   }
 
-  char ops[][] = { "==",
+  char *ops[] = { "==",
 		  "!=",
 		  "<=",
 		  ">="		 
@@ -188,10 +179,34 @@ char get_escape_char(char c) {
 struct token *read_str_literal(struct token* cur, char *p) {
   int len =  strlen(p);
   char *s = (char *)malloc(sizeof(char) * len);
-  memcpy(q, p, len);
+  memcpy(s, p, len);
 
   int l = 0;
-  // char *
+  char *r = (char *)malloc(sizeof(char) * strlen(p));
+  while(1) {
+    char c = p[0];
+
+    if (l == 1024) error_at(p, "string literal too large");
+    if (c == 0) error_at(p, "unclosed string literal");
+    if (c == '"') break;
+    if (c == '\\') {
+      memmove(p, p+1, strlen(p));
+      char t = get_escape_char(p[0]);
+      strncat(r, &t, 1);
+      memmove(p, p+1, strlen(p));
+    } else {
+      strncat(r, &c, 1);
+      memmove(p, p+1, strlen(p));      
+    }
+    
+  }
+
+  struct token *tok = new_token(tk_str, cur, s, strlen(s) - strlen(p) + 1);
+  char c = 0;
+  strncat(r, &c, 1);
+  tok->contents = r;
+  tok->content_length = strlen(tok->contents);
+  return tok;
 }
 
 struct token* tokenize(char *p) {
@@ -199,7 +214,7 @@ struct token* tokenize(char *p) {
   h.next = NULL;
   struct token *cur = &h;
 
-  for(strlen(p) > 0) {
+  while(strlen(p) > 0) {
     char c = p[0];
     if (isspace(c)) {
       memmove(p, p+1, strlen(p));
@@ -227,7 +242,7 @@ struct token* tokenize(char *p) {
       int len = strlen(keyword);
       cur = new_token(tk_reserved, cur, p, len);
       memmove(p, p+len, strlen(p));
-      continue
+      continue;
     }
 
     if (is_reserved(c)) {
@@ -244,7 +259,7 @@ struct token* tokenize(char *p) {
 
       while((strlen(p) > 0) && isalnum(p[0])) memmove(p, p+1, strlen(p));
 
-      cur = new_token(tk_indent, cur, q, len-strlen(p));
+      cur = new_token(tk_ident, cur, q, len-strlen(p));
       continue;
     }
 
@@ -263,7 +278,7 @@ struct token* tokenize(char *p) {
       cur->len = len - strlen(p);
       continue;
     }
-    char error_string[10];
+    char error_string[20];
     sprintf(error_string, "cannot tokenize %c", c);
     error_at(p, error_string);
   }

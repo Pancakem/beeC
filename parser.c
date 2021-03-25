@@ -16,7 +16,7 @@ struct va* find_var(struct token *tok) {
 
 struct node *new_unary(enum node_kind k, struct node *n, struct token *tok) {
   struct node nd = { .kind = k, .lhs = n, .tok = tok};
-return &nd;
+  return &nd;
 }
 
 struct node *new_binary(enum node_kind k, struct node *lhs, struct node *rhs, struct token *tok) {

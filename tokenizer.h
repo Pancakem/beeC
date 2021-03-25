@@ -20,6 +20,10 @@ struct token {
   int content_length;
 };
 
+struct token *t;
+char *filename = "";
+char *inpt = "";
+
 void error_at(char *loc, char *f);
 void error_tok(struct token *tok, char *f);
 bool peek(char *s);
