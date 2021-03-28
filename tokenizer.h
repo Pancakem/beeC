@@ -2,27 +2,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-enum token_kind {
-		 tk_reserved,
-		 tk_ident,
-		 tk_str,
-		 tk_num,
-		 tk_eof
-};
-
-struct token {
-  enum token_kind kind;
-  struct token *next;
-  int val;
-  char* str;
-  int len;
-  char *contents;
-  int content_length;
-};
+enum token_kind;
+struct token;
 
 struct token *t;
-char *filename = "";
-char *inpt = "";
 
 void error_at(char *loc, char *f);
 void error_tok(struct token *tok, char *f);

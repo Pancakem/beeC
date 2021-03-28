@@ -3,6 +3,27 @@
 
 #include "tokenizer.h"
 
+char *filename = "";
+char *inpt = "";
+
+enum token_kind {
+		 tk_reserved,
+		 tk_ident,
+		 tk_str,
+		 tk_num,
+		 tk_eof
+};
+
+struct token {
+  enum token_kind kind;
+  struct token *next;
+  int val;
+  char* str;
+  int len;
+  char *contents;
+  int content_length;
+};
+
 void error_at(char *loc, char *f){
   char *k = inpt;
   int line = 1;
