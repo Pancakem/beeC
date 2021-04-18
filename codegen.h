@@ -1,12 +1,8 @@
+#include "parser.h"
 #include "tokenizer.h"
 
-int label_seq = 0;
-char *func_name;
-char *arg_reg1[] = {"dil", "sil", "dl", "cl", "r8b", "r9b"};
-char *arg_reg8[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-
 void gen_addr(struct node *nd);
-void gen_lval(struct node *n);
+void gen_lval(struct node *nd);
 void load(struct typ* ty);
 void store(struct typ* ty);
 void gen(struct node *n);
