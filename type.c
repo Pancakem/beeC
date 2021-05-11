@@ -1,38 +1,54 @@
-#include "type.h"
+#include "parser.c"
 
-struct typ* char_type() {
-  struct typ tp = {.kind = ty_char};
-  return &tp;
+struct typ *char_type();
+struct typ *int_type();
+struct typ *pointer_to(struct typ *b);
+struct typ *array_of(struct typ *b, int s);
+int size_of(struct typ *ty);
+void visit(struct node *n);
+void add_type(struct program *p);
+
+struct typ *char_type() {
+  struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
+  tp->kind = ty_char;
+  return tp;
 }
 
-struct typ* int_type() {
-  struct typ tp = {.kind = ty_int};
-  return &tp;
+struct typ *int_type() {
+  struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
+  tp->kind = ty_int;
+  return tp;
 }
 
-struct typ* pointer_to(struct typ* b) {
-  struct typ tp = {.kind = ty_ptr, .base = b};
-  return &tp;
+struct typ *pointer_to(struct typ *b) {
+  struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
+  tp->kind = ty_ptr;
+  tp->base = b;
+  return tp;
 }
 
-struct typ* array_of(struct typ* b, int s) {
-  struct typ tp = {.kind = ty_array, .base = b, .array_size = s};
-  return &tp;
+struct typ *array_of(struct typ *b, int s) {
+  struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
+  tp->kind = ty_array;
+  tp->base = b;
+  tp->array_size = s;
+  return tp;
 }
 
-int size_of(struct typ* ty) {
-  switch(ty->kind) {
+int size_of(struct typ *ty) {
+  switch (ty->kind) {
   case ty_char:
     return 1;
   case ty_int:
   case ty_ptr:
     return 8;
   }
-  return size_of(ty->base) * ty->array_size;  
+  return size_of(ty->base) * ty->array_size;
 }
 
 void visit(struct node *n) {
-  if (n == NULL) return;
+  if (n == NULL)
+    return;
 
   visit(n->lhs);
   visit(n->rhs);
@@ -43,18 +59,18 @@ void visit(struct node *n) {
   visit(n->inc);
 
   struct node *b = n->body;
-  while(b != NULL) {
+  while (b != NULL) {
     visit(b);
-    b = b->next;    
+    b = b->next;
   }
 
   struct node *a = n->args;
-  while(a != NULL) {
+  while (a != NULL) {
     visit(a);
     a = a->next;
   }
 
-  switch(n->kind) {
+  switch (n->kind) {
   case nd_mul:
   case nd_div:
   case nd_eq:
@@ -70,15 +86,17 @@ void visit(struct node *n) {
     return;
   case nd_add:
     if (n->rhs->ty->base != NULL) {
-      struct node* tmp = n->lhs;
+      struct node *tmp = n->lhs;
       n->lhs = n->rhs;
       n->rhs = tmp;
     }
-    if (n->rhs->ty->base != NULL) error_tok(n->tok, "invalid pointer arithmetic operands");
+    if (n->rhs->ty->base != NULL)
+      error_tok(n->tok, "invalid pointer arithmetic operands");
     n->ty = n->lhs->ty;
     return;
   case nd_sub:
-    if (n->rhs->ty->base != NULL) error_tok(n->tok, "invalid pointer arithmetic operands");
+    if (n->rhs->ty->base != NULL)
+      error_tok(n->tok, "invalid pointer arithmetic operands");
     n->ty = n->lhs->ty;
     return;
 
@@ -86,11 +104,14 @@ void visit(struct node *n) {
     n->ty = n->lhs->ty;
     return;
   case nd_addr:
-    if (n->lhs->ty->kind == ty_array) n->ty = pointer_to(n->lhs->ty->base);
-    else n->ty = pointer_to(n->lhs->ty);
+    if (n->lhs->ty->kind == ty_array)
+      n->ty = pointer_to(n->lhs->ty->base);
+    else
+      n->ty = pointer_to(n->lhs->ty);
     return;
   case nd_deref:
-    if (n->lhs->ty->base == NULL) error_tok(n->tok, "invalid pointer dereference");
+    if (n->lhs->ty->base == NULL)
+      error_tok(n->tok, "invalid pointer dereference");
     n->ty = n->rhs->ty->base;
     return;
 
@@ -99,22 +120,19 @@ void visit(struct node *n) {
     n->ty = int_type();
     n->val = size_of(n->lhs->ty);
     n->lhs = NULL;
-    return; 
+    return;
   }
 }
 
-void add_type(struct program* p) {
-  struct fun* fn = p->fns;
+void add_type(struct program *p) {
+  struct fun *fn = p->fns;
 
   while (fn != NULL) {
     struct node *n = fn->node;
-    while(n != NULL) {
+    while (n != NULL) {
       visit(n);
-      n = n->next;      
+      n = n->next;
     }
-    fn = fn->next;    
+    fn = fn->next;
   }
-  
 }
-
-
