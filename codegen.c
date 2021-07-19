@@ -1,22 +1,13 @@
-#include "type.c"
+#include "codegen.h"
+#include "type.h"
+
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 int label_seq = 0;
-char *func_name;
-char *arg_reg1[] = {"dil", "sil", "dl", "cl", "r8b", "r9b"};
 char *arg_reg8[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-
-void gen_addr(struct node *nd);
-void gen_lval(struct node *nd);
-void load(struct typ *ty);
-void store(struct typ *ty);
-void gen(struct node *n);
-void emit_data(struct program *prog);
-void load_arg(struct va *v, int idx);
-void emit_text(struct program *prog);
-void codegen(struct program *prog);
-
+char *arg_reg1[] = {"dil", "sil", "dl", "cl", "r8b", "r9b"};
 
 void gen_addr(struct node *nd) {
   struct va *v = (struct va *)malloc(sizeof(struct va));
@@ -29,12 +20,14 @@ void gen_addr(struct node *nd) {
     } else
       printf("  push offset %s\n", v->name);
 
+    free(v);
     return;
   case nd_deref:
     gen(nd->lhs);
+    free(v);
     return;
   }
-
+  free(v);
   error_tok(nd->tok, "not an lvalue");
 }
 
