@@ -11,11 +11,11 @@ char *read_file(const char *file_path) {
     printf("failed to open the file");
     exit(1);
   }
-  fseek(fle, 0L, SEEK_END);
+  fseek(fle, 0, SEEK_END);
   long size = ftell(fle);
-  fseek(fle, 0L, SEEK_SET);
-  char *buffer = (char *)malloc(sizeof(char) * size);
-  fread(buffer, size, 0, fle);
+  fseek(fle, 0, SEEK_SET);
+  char *buffer = (char *)malloc(sizeof(char) * size + 1);
+  fread(buffer, 1, size, fle);
   fclose(fle);
   return buffer;
 }
@@ -47,5 +47,6 @@ int main(int argc, char **argv) {
     fn->stack_size = align_to(ot, 8);    
   }
   codegen(p);
+  free(p);
   return 0;  
 }
