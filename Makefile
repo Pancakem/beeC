@@ -1,10 +1,10 @@
 CC = gcc
-files = main.c parser.c type.c tokenizer.c codegen.c
-incs = parser.h type.h tokenizer.h codege.h 
+files = main.c parser.c type.c tokenizer.c codegen.c util.c
+incs = parser.h type.h tokenizer.h codege.h util.h
 program = compiler
 
 build:
-	$(CC) -I incs $(files) -o $(program) -O3 -Wall -pedantic
+	$(CC) -I incs $(files) -o $(program) -g -Wall
 
 clean:
 	rm $(program) *.gch

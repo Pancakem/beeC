@@ -2,9 +2,11 @@
 #define TOKENIZER_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
 extern char *filename;
 extern char *inpt;
+extern size_t pos;
 
 enum token_kind { tk_reserved, tk_ident, tk_str, tk_num, tk_eof };
 
@@ -39,5 +41,6 @@ char get_escape_char(char c);
 struct token *read_str_literal(struct token *cur, char *p);
 struct token *tokenize(char *p);
 
+void free_all(struct token *value);
 
 #endif /* TOKENIZER_H */

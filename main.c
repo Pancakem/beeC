@@ -8,7 +8,7 @@
 char *read_file(const char *file_path) {
   FILE *fle = fopen(file_path, "r");
   if (!fle) {
-    printf("failed to open the file");
+    puts("failed to open the file\n");
     exit(1);
   }
   fseek(fle, 0, SEEK_END);
@@ -32,11 +32,12 @@ int main(int argc, char **argv) {
 
   filename = argv[1];
   char* buffer = read_file(filename);
-  inpt = buffer;
+  inpt = (char *)malloc(sizeof(char) * strlen(buffer));
+  strcpy(inpt, buffer);
   t = tokenize(buffer);
   struct program *p = prog();
-  add_type(p); // seg fault here
-  
+  free_all(t);
+  add_type(p);
   for (struct fun *fn = p->fns; fn != NULL; fn = fn->next) {
     int ot = 0;
     for (struct var_list *vl = fn->locals; vl != NULL; vl = vl->next) {
@@ -46,6 +47,7 @@ int main(int argc, char **argv) {
     }
     fn->stack_size = align_to(ot, 8);    
   }
+  
   codegen(p);
   free(p);
   return 0;  

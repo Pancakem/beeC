@@ -1,35 +1,25 @@
 #include "tokenizer.h"
+#include "util.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-char *inpt = "";
-char *filename = "";
+char *inpt = 0;
+char *filename = 0;
+size_t pos = 0;
 
 void error_at(char *loc, char *f) {
   char *k = inpt;
   int line = 1;
-  char *buf = (char *)malloc(sizeof(char) * 50);
   while (strlen(k) > 0) {
     if (k[0] == '\n') {
-      if (strlen(k) <= strlen(loc) + 2)
-        break;
-
       line++;
-      buf = "";
-    } else {
-      char ch = k[0];
-      strncat(buf, &ch, 1);
-    }
+    }    
     k++;
   }
 
   printf("%s:%d", filename, line);
-
-  int p = strlen(buf);
-  printf("%s", buf);
-  printf("%*s", p, "");
   printf("^ ");
 }
 
@@ -50,7 +40,7 @@ bool peek(char *s) {
 
   char test_str[t->len];
   memcpy(test_str, t->str, t->len);
-  if (memcmp(test_str, s, t->len) != 0)
+  if (strncmp(test_str, s, t->len) != 0)
     return false;
 
   return true;
@@ -114,15 +104,17 @@ struct token *new_token(enum token_kind k, struct token *cur, char *str,
 }
 
 bool starts_with(char *str, char *op) {
-  if (strlen(str) < strlen(op))
-    return false;
-  return memcmp(str, op, strlen(op));
+  return strncmp(str, op, strlen(op)) == 0;
+}
+
+bool starts_with_char(char c, char op) {
+  return c == op;  
 }
 
 char *starts_with_reserved(char *str) {
-  char *kws[] = {"if", "else", "while", "for", "int", "char", "sizeof"};
+  char *kws[] = {"return", "if", "else", "while", "for", "int", "char", "sizeof"};
 
-  for (int i = 0; i < 8; ++i) {
+  for (int i = 0; i < 7; ++i) {
     int len = strlen(kws[i]);
     if ((starts_with(str, kws[i])) && !isalnum(str[len]))
       return kws[i];
@@ -191,32 +183,36 @@ struct token *read_str_literal(struct token *cur, char *p) {
   memcpy(s, p, len);
 
   int l = 0;
-  char *r = (char *)malloc(sizeof(char) * strlen(p));
+  char r[strlen(p)];
+  int curr_pos = 0;
   while (1) {
-    char c = p[0];
+    char c = p[curr_pos];
 
     if (l == 1024)
-      error_at(p, "string literal too large");
+      error_at(p+curr_pos, "string literal too large");
     if (c == 0)
-      error_at(p, "unclosed string literal");
+      error_at(p+curr_pos, "unclosed string literal");
     if (c == '"')
       break;
     if (c == '\\') {
-      memmove(p, p + 1, strlen(p));
-      char t = get_escape_char(p[0]);
+      char t = get_escape_char((p+curr_pos)[0]);
       strncat(r, &t, 1);
-      memmove(p, p + 1, strlen(p));
+      curr_pos++;
     } else {
       strncat(r, &c, 1);
-      memmove(p, p + 1, strlen(p));
+      curr_pos++;
     }
   }
 
-  struct token *tok = new_token(tk_str, cur, s, strlen(s) - strlen(p) + 1);
+  struct token *tok = new_token(tk_str, cur, s, strlen(s) - strlen(p+curr_pos) + 1);
   char c = 0;
   strncat(r, &c, 1);
   tok->contents = r;
   tok->content_length = strlen(tok->contents);
+
+  // test :
+  pos += curr_pos;
+  
   return tok;
 }
 
@@ -224,79 +220,89 @@ struct token *tokenize(char *p) {
   struct token h;
   h.next = NULL;
   struct token *cur = &h;
-
+  
   while (strlen(p) > 0) {
-    char c = p[0];
+    char c = p[pos];
     if (isspace(c)) {
-      memmove(p, p + 1, strlen(p));
+      pos++;
     }
     if (starts_with(p, "//")) {
-      memmove(p, p + 2, strlen(p));
-
-      while (p[0] != '\n') {
-        memmove(p, p + 1, strlen(p));
+      pos += 2;
+      while (p[pos] != '\n') {
+	pos++;
       }
       continue;
     }
 
-    if (starts_with(p, "/*")) {
-      while ((strlen(p) > 1) && (!starts_with(p, "*/")))
-        memmove(p, p + 1, strlen(p));
+    if (starts_with(p+pos, "/*")) {
+      while ((strlen(p+pos) > 1) && (!starts_with(p+pos, "*/")))
+	pos++;
 
-      if (strlen(p) < 2)
-        error_at(p, "unclosed block comment");
+      if (strlen(p+pos) < 2)
+        error_at(p+pos, "unclosed block comment");
 
-      memmove(p, p + 2, strlen(p));
+      pos+=2;
       continue;
     }
 
-    char *keyword = starts_with_reserved(p);
+    char *keyword = starts_with_reserved(p+pos);
     if (keyword != NULL) {
       int len = strlen(keyword);
-      cur = new_token(tk_reserved, cur, p, len);
-      memmove(p, p + len, strlen(p));
+      cur = new_token(tk_reserved, cur, p+pos, len);
+      pos += len;
       continue;
     }
 
     if (is_reserved(c)) {
-      cur = new_token(tk_reserved, cur, p, 1);
-      memmove(p, p + 1, strlen(p));
+      cur = new_token(tk_reserved, cur, p+pos, 1);
+      pos++;
       continue;
     }
 
     if (isalpha(c)) {
-      int len = strlen(p);
+      int len = strlen(p+pos);
       char *q = (char *)malloc(len * sizeof(char));
       memcpy(q, p, len);
-      memmove(p, p + 1, len);
+      pos++;
 
-      while ((strlen(p) > 0) && isalnum(p[0]))
-        memmove(p, p + 1, strlen(p));
+      while ((strlen(p+pos) > 0) && isalnum((p+pos)[0]))
+	pos++;
 
-      cur = new_token(tk_ident, cur, q, len - strlen(p));
+      cur = new_token(tk_ident, cur, q, len - strlen(p+pos));
       continue;
     }
 
     if (c == '"') {
-      cur = read_str_literal(cur, p);
-      memmove(p, p + cur->len, strlen(p));
+      cur = read_str_literal(cur, p+pos);
+      pos++;
       continue;
     }
 
     if (isdigit(c)) {
-      cur = new_token(tk_num, cur, p, 0);
+      cur = new_token(tk_num, cur, p+pos, 0);
       int len = strlen(p);
-      int v = atoi(p);
+      int v = atoi(p+pos);
 
       cur->val = v;
-      cur->len = len - strlen(p);
+      cur->len = len - strlen(p+pos);
       continue;
     }
-    char error_string[20];
+    char error_string[50];
     sprintf(error_string, "cannot tokenize %c", c);
-    error_at(p, error_string);
+    error_at(p+pos, error_string);
   }
 
-  new_token(tk_eof, cur, p, 0);
+  new_token(tk_eof, cur, p+pos, 0);
   return h.next;
+}
+
+
+void free_all(struct token* value) {
+  void *anode;
+
+  while(value != NULL) {
+    anode = value;
+    value = value->next;
+    free(anode);    
+  }
 }
