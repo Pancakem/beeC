@@ -2,28 +2,25 @@
 
 struct typ *char_type() {
   struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
-  tp->kind = ty_char;
+  init_type(tp, ty_char, NULL, 0);
   return tp;
 }
 
 struct typ *int_type() {
   struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
-  tp->kind = ty_int;
+  init_type(tp, ty_int, NULL, 0);
   return tp;
 }
 
 struct typ *pointer_to(struct typ *b) {
   struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
-  tp->kind = ty_ptr;
-  tp->base = b;
+  init_type(tp, ty_ptr, b, 0);
   return tp;
 }
 
 struct typ *array_of(struct typ *b, int s) {
   struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
-  tp->kind = ty_array;
-  tp->base = b;
-  tp->array_size = s;
+  init_type(tp, ty_array, b, s);
   return tp;
 }
 
@@ -62,6 +59,7 @@ void visit(struct node *n) {
     a = a->next;
   }
 
+  struct node *tmp;
   switch (n->kind) {
   case nd_mul:
   case nd_div:
@@ -78,7 +76,7 @@ void visit(struct node *n) {
     return;
   case nd_add:
     if (n->rhs->ty->base != NULL) {
-      struct node *tmp = n->lhs;
+      tmp = n->lhs;
       n->lhs = n->rhs;
       n->rhs = tmp;
     }

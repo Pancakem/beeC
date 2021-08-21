@@ -6,7 +6,7 @@
 
 extern char *filename;
 extern char *inpt;
-extern size_t pos;
+extern int pos;
 
 enum token_kind { tk_reserved, tk_ident, tk_str, tk_num, tk_eof };
 
@@ -22,12 +22,11 @@ struct token {
 
 struct token *t;
 
-
 void error_at(char *loc, char *f);
 void error_tok(struct token *tok, char *f);
 bool peek(char *s);
-struct token *consume(char *op);
-struct token *consume_ident();
+struct token* consume(char *op);
+struct token* consume_ident();
 void expect(char *op);
 int expect_number();
 char *expect_ident();
@@ -41,6 +40,6 @@ char get_escape_char(char c);
 struct token *read_str_literal(struct token *cur, char *p);
 struct token *tokenize(char *p);
 
-void free_all(struct token *value);
+void free_token(struct token *value);
 
 #endif /* TOKENIZER_H */

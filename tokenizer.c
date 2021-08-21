@@ -1,5 +1,4 @@
 #include "tokenizer.h"
-#include "util.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
@@ -7,9 +6,9 @@
 
 char *inpt = 0;
 char *filename = 0;
-size_t pos = 0;
+int pos = 0;
 
-void error_at(char *loc, char *f) {
+void error_at(char *loc, char *err_str) {
   char *k = inpt;
   int line = 1;
   while (strlen(k) > 0) {
@@ -19,8 +18,9 @@ void error_at(char *loc, char *f) {
     k++;
   }
 
-  printf("%s:%d", filename, line);
-  printf("^ ");
+  printf("%s:%d: error: %s", filename, line, loc);
+  printf("^ \n");
+  exit(1);
 }
 
 void error_tok(struct token *tok, char *f) {
@@ -38,30 +38,29 @@ bool peek(char *s) {
   if (strlen(s) != t->len)
     return false;
 
-  char test_str[t->len];
-  memcpy(test_str, t->str, t->len);
+  char test_str[t->len + 1];
+  strncpy(test_str, t->str, t->len);
   if (strncmp(test_str, s, t->len) != 0)
     return false;
 
   return true;
 }
 
-struct token *consume(char *op) {
+struct token* consume(char *op) {
   if (!peek(op))
     return NULL;
 
-  struct token *tt = (struct token*)malloc(sizeof(struct token));
-  tt= t;
-  t = t->next;
-  return tt;
+  struct token* tok = t;
+  t = tok->next;
+  return tok;
 }
 
 struct token* consume_ident() {
   if (t->kind != tk_ident) return NULL;
-  struct token *tt = (struct token*)malloc(sizeof(struct token));
-  tt = t;
-  t = t->next;
-  return tt;  
+  
+  struct token* tt = t;
+  t = tt->next;
+  return tt;
 }
 
 void expect(char *op) {
@@ -86,7 +85,8 @@ char *expect_ident() {
   if (t->kind != tk_ident)
     error_tok(t, "expected an identifier");
   char *s = (char *)malloc(sizeof(char) * t->len);
-  memcpy(s, t->str, t->len);
+  strncpy(s, t->str, t->len);
+  printf("%s\n", t->str);
   t = t->next;
   return s;
 }
@@ -99,6 +99,10 @@ struct token *new_token(enum token_kind k, struct token *cur, char *str,
   p->kind = k;
   p->str = str;
   p->len = len;
+  p->val = 0;
+  p->contents = NULL;
+  p->len = 0;
+  p->content_length;
   cur->next = p;
   return p;
 }
@@ -179,8 +183,8 @@ char get_escape_char(char c) {
 
 struct token *read_str_literal(struct token *cur, char *p) {
   int len = strlen(p);
-  char *s = (char *)malloc(sizeof(char) * len);
-  memcpy(s, p, len);
+  char s[len+1];
+  strncpy(s, p, len);
 
   int l = 0;
   char r[strlen(p)];
@@ -221,10 +225,11 @@ struct token *tokenize(char *p) {
   h.next = NULL;
   struct token *cur = &h;
   
-  while (strlen(p) > 0) {
+  while (strlen(p+pos) > 0) {
     char c = p[pos];
     if (isspace(c)) {
       pos++;
+      continue;
     }
     if (starts_with(p, "//")) {
       pos += 2;
@@ -261,14 +266,16 @@ struct token *tokenize(char *p) {
 
     if (isalpha(c)) {
       int len = strlen(p+pos);
-      char *q = (char *)malloc(len * sizeof(char));
-      memcpy(q, p, len);
       pos++;
-
       while ((strlen(p+pos) > 0) && isalnum((p+pos)[0]))
 	pos++;
 
-      cur = new_token(tk_ident, cur, q, len - strlen(p+pos));
+      int new_len = strlen(p+pos);
+      char q[new_len];
+      strncpy(q, p+pos, len - new_len);
+      
+      cur = new_token(tk_ident, cur, q, len - new_len);
+      printf("%s\n", q);
       continue;
     }
 
@@ -280,11 +287,12 @@ struct token *tokenize(char *p) {
 
     if (isdigit(c)) {
       cur = new_token(tk_num, cur, p+pos, 0);
-      int len = strlen(p);
+      int len = strlen(p+pos);
       int v = atoi(p+pos);
 
       cur->val = v;
       cur->len = len - strlen(p+pos);
+      pos++;
       continue;
     }
     char error_string[50];
@@ -297,7 +305,7 @@ struct token *tokenize(char *p) {
 }
 
 
-void free_all(struct token* value) {
+void free_token(struct token* value) {
   void *anode;
 
   while(value != NULL) {
