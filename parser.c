@@ -496,7 +496,7 @@ struct program *prog() {
     if (is_function()) {
       current->next = function();
       current = current->next;
-      printf("Found function %s", current->next->name);
+      printf("Found function %s\n", current->next->name);
     }else global_var();
   }
 

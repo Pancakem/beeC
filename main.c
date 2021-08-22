@@ -36,17 +36,27 @@ int main(int argc, char **argv) {
   inpt = (char *)malloc(sizeof(char) * strlen(buffer) + 1);
   strcpy(inpt, buffer);
   t = tokenize(buffer);
+
+  struct token *temp = t;
+
+  while( t != NULL) {
+    printf("Token kind %d\n", t->kind);
+    t = t->next;
+  }
+
+  t = temp;
+  
   struct program *p = prog();
-  /* add_type(p); */
-  /* for (struct fun *fn = p->fns; fn != NULL; fn = fn->next) { */
-  /*   int ot = 0; */
-  /*   for (struct var_list *vl = fn->locals; vl != NULL; vl = vl->next) { */
-  /*     struct va *v = vl->v; */
-  /*     ot += size_of(v->ty); */
-  /*     vl->v->offset = ot;       */
-  /*   } */
-  /*   fn->stack_size = align_to(ot, 8);     */
-  /* } */
+  add_type(p);
+  for (struct fun *fn = p->fns; fn != NULL; fn = fn->next) {
+    int ot = 0;
+    for (struct var_list *vl = fn->locals; vl != NULL; vl = vl->next) {
+      struct va *v = vl->v;
+      ot += size_of(v->ty);
+      vl->v->offset = ot;
+    }
+    fn->stack_size = align_to(ot, 8);
+  }
   
   /* codegen(p); */
   /* free_token(t); */
