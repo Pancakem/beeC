@@ -18,7 +18,8 @@ void error_at(char *loc, char *err_str) {
     k++;
   }
 
-  printf("%s:%d: error: %s", filename, line, loc);
+  printf("%s:%d: error: %s\n", filename, line, err_str);
+  printf("%s\n", loc);
   printf("^ \n");
   exit(1);
 }
@@ -34,13 +35,11 @@ void error_tok(struct token *tok, char *f) {
 bool peek(char *s) {
   if (t->kind != tk_reserved)
     return false;
-
+  
   if (strlen(s) != t->len)
     return false;
 
-  char test_str[t->len + 1];
-  strncpy(test_str, t->str, t->len);
-  if (strncmp(test_str, s, t->len) != 0)
+  if (strncmp(t->str, s, t->len) != 0)
     return false;
 
   return true;
@@ -65,7 +64,7 @@ struct token* consume_ident() {
 
 void expect(char *op) {
   if (!peek(op)) {
-    char s[11 + strlen(op)];
+    char s[20 + strlen(op)];
     sprintf(s, "unexpected '%s'", op);
     error_tok(t, s);
   }
@@ -101,8 +100,8 @@ struct token *new_token(enum token_kind k, struct token *cur, char *str,
   p->len = len;
   p->val = 0;
   p->contents = NULL;
-  p->len = 0;
-  p->content_length;
+  p->content_length = 0;
+  
   cur->next = p;
   return p;
 }
@@ -118,7 +117,7 @@ bool starts_with_char(char c, char op) {
 char *starts_with_reserved(char *str) {
   char *kws[] = {"return", "if", "else", "while", "for", "int", "char", "sizeof"};
 
-  for (int i = 0; i < 7; ++i) {
+  for (int i = 0; i < 8; ++i) {
     int len = strlen(kws[i]);
     if ((starts_with(str, kws[i])) && !isalnum(str[len]))
       return kws[i];
@@ -266,16 +265,16 @@ struct token *tokenize(char *p) {
 
     if (isalpha(c)) {
       int len = strlen(p+pos);
-      pos++;
+      int start_pos = pos;
+      pos++;     
+      
       while ((strlen(p+pos) > 0) && isalnum((p+pos)[0]))
 	pos++;
-
-      int new_len = strlen(p+pos);
-      char q[new_len];
-      strncpy(q, p+pos, len - new_len);
       
+      int new_len = strlen(p+pos);
+      char q[len - new_len];
+      strncpy(q, p+start_pos, len - new_len);      
       cur = new_token(tk_ident, cur, q, len - new_len);
-      printf("%s\n", q);
       continue;
     }
 
