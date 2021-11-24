@@ -58,12 +58,12 @@ void init_var_list(struct var_list *vl, struct var_list *next, struct va *v) {
 }
 
 void init_function(struct fun *fn, struct fun *next, char *name,
-                   struct var_list *params, struct node *node,
+                   struct var_list *params, struct node *nde,
                    struct var_list *locals, int stack_size) {
-  fn->next;
+  fn->next = next;
   fn->name = name;
   fn->params = params;
-  fn->node = node;
+  fn->node = nde;
   fn->locals = locals;
   fn->stack_size = stack_size;
 }
@@ -481,9 +481,7 @@ bool is_function() {
   struct token *tok = t;
   base_type();
   bool is_ident = consume_ident() != NULL;
-  printf("%d", is_ident);
   bool is_func_open = consume("(") != NULL;
-  printf("%d", is_func_open);
   t = tok;
   return is_ident && is_func_open;
 }

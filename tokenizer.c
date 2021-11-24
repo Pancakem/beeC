@@ -34,8 +34,7 @@ void error_tok(struct token *tok, char *f) {
 }
 
 bool peek(char *s) {
-  struct token *tt = t->next;
-  return ((strlen(s) != tt->len) && strncmp(tt->str, s, tt->len) != 0);
+  return ((strlen(s) == t->len) && strncmp(t->str, s, t->len) == 0);
 }
 
 struct token *consume(char *op) {
@@ -79,7 +78,6 @@ char *expect_ident() {
     error_tok(t, "expected an identifier");
   char *s = (char *)malloc(sizeof(char) * t->len);
   strncpy(s, t->str, t->len);
-  printf("%s\n", t->str);
   t = t->next;
   return s;
 }
