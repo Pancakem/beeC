@@ -44,7 +44,6 @@ int main(int argc, char **argv) {
       t = NULL; // TEST -- this has to be the end.
       break;
     }
-    printf("%s\n", t->str);
     t = t->next;
   }
 

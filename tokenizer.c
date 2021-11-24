@@ -253,8 +253,9 @@ struct token *tokenize(char *p) {
     }
 
     if (is_reserved(c)) {
-      char *q = (char *)malloc(sizeof(char));
-      strncpy(q, p + pos, 1);
+      char *q = (char *)malloc(sizeof(char) + 1);
+      strncpy(q, p + pos, 1 + 1);
+      q[1] = '\0';
       cur = new_token(tk_reserved, cur, q, 1);
       pos++;
       continue;
@@ -269,8 +270,10 @@ struct token *tokenize(char *p) {
         pos++;
 
       int new_len = strlen(p + pos);
-      char *q = (char *)malloc(sizeof(char) * (len - new_len));
-      strncpy(q, p + start_pos, len - new_len - 1);
+      char *q = (char *)malloc(sizeof(char) * (len - new_len + 1));
+      strncpy(q, p + start_pos, len - new_len);
+      q[len - new_len] = '\0';
+
       cur = new_token(tk_ident, cur, q, len - new_len);
       continue;
     }
@@ -291,6 +294,7 @@ struct token *tokenize(char *p) {
       int new_len = strlen(p + pos);
       char *q = (char *)malloc(sizeof(char) * (len - new_len));
       strncpy(q, p + start_pos, len - new_len);
+      q[len - new_len] = '\0';
       cur = new_token(tk_num, cur, q, 0);
 
       int v = atoi(q);
