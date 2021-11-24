@@ -1,4 +1,4 @@
-CC = clang
+CC = gcc
 src = main.c parser.c type.c tokenizer.c codegen.c
 inc = parser.h type.h tokenizer.h codege.h
 program = compiler

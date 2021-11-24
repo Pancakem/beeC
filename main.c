@@ -1,10 +1,10 @@
+#include "codegen.h"
+#include "parser.h"
+#include "tokenizer.h"
+#include "type.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "tokenizer.h"
-#include "parser.h"
-#include "type.h"
-#include "codegen.h"
 
 char *read_file(const char *file_path) {
   FILE *fle = fopen(file_path, "r");
@@ -32,20 +32,24 @@ int main(int argc, char **argv) {
   }
 
   filename = argv[1];
-  char* buffer = read_file(filename);
+  char *buffer = read_file(filename);
   inpt = (char *)malloc(sizeof(char) * strlen(buffer) + 1);
   strcpy(inpt, buffer);
   t = tokenize(buffer);
 
   struct token *temp = t;
 
-  while( t != NULL) {
-    printf("Token kind %d\n", t->kind);
+  while (t != NULL) {
+    if (t->len == 0) {
+      t = NULL; // TEST -- this has to be the end.
+      break;
+    }
+    printf("%s\n", t->str);
     t = t->next;
   }
 
   t = temp;
-  
+
   struct program *p = prog();
   add_type(p);
   for (struct fun *fn = p->fns; fn != NULL; fn = fn->next) {
@@ -57,7 +61,7 @@ int main(int argc, char **argv) {
     }
     fn->stack_size = align_to(ot, 8);
   }
-  
+
   /* codegen(p); */
   /* free_token(t); */
   /* free(p); */

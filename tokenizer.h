@@ -7,6 +7,7 @@
 extern char *filename;
 extern char *inpt;
 extern int pos;
+extern struct token *t;
 
 enum token_kind { tk_reserved, tk_ident, tk_str, tk_num, tk_eof };
 
@@ -15,24 +16,22 @@ struct token {
   struct token *next;
   int val;
   char *str;
-  int len;
+  unsigned long len;
   char *contents;
-  int content_length;
+  unsigned long content_length;
 };
-
-struct token *t;
 
 void error_at(char *loc, char *f);
 void error_tok(struct token *tok, char *f);
 bool peek(char *s);
-struct token* consume(char *op);
-struct token* consume_ident();
+struct token *consume(char *op);
+struct token *consume_ident();
 void expect(char *op);
 int expect_number();
 char *expect_ident();
 bool at_eof();
 struct token *new_token(enum token_kind k, struct token *cur, char *str,
-                        int len);
+                        unsigned long len);
 bool starts_with(char *str, char *op);
 char *starts_with_reserved(char *str);
 bool is_reserved(char c);

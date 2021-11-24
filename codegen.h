@@ -4,7 +4,7 @@
 #include "parser.h"
 
 extern int label_seq;
-char *func_name;
+extern char *func_name;
 extern char *arg_reg1[];
 extern char *arg_reg8[];
 
@@ -17,6 +17,5 @@ void emit_data(struct program *prog);
 void load_arg(struct va *v, int idx);
 void emit_text(struct program *prog);
 void codegen(struct program *prog);
-
 
 #endif /* CODEGEN_H */

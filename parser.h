@@ -83,28 +83,29 @@ struct program {
   struct fun *fns;
 };
 
-struct var_list *locals;
-struct var_list *globals;
+// struct var_list *locals;
+// struct var_list *globals;
 
 extern int label_count;
 
 void init_node(struct node *init_node, enum node_kind kind, struct node *next,
-	       struct typ *ty, struct token *tok, struct node *lhs, struct node *rhs,
-	       struct node *cond, struct node *then, struct node *els,
-	       struct node *init, struct node *inc, struct node *body,
-	       char *func_name, struct node *args, struct va *v,
-	       int val);
+               struct typ *ty, struct token *tok, struct node *lhs,
+               struct node *rhs, struct node *cond, struct node *then,
+               struct node *els, struct node *init, struct node *inc,
+               struct node *body, char *func_name, struct node *args,
+               struct va *v, int val);
 
-void init_va(struct va *v, char *name, struct typ *ty,
-	     bool is_local, char *contents, int content_len, int offset);
+void init_va(struct va *v, char *name, struct typ *ty, bool is_local,
+             char *contents, int content_len, int offset);
 
-void init_type(struct typ *ty, enum type_kind kind, struct typ *base, int array_size);
+void init_type(struct typ *ty, enum type_kind kind, struct typ *base,
+               int array_size);
 
 void init_var_list(struct var_list *vl, struct var_list *next, struct va *v);
 
 void init_function(struct fun *fn, struct fun *next, char *name,
-		   struct var_list *params, struct node *node,
-		   struct var_list *locals, int stack_size);
+                   struct var_list *params, struct node *node,
+                   struct var_list *locals, int stack_size);
 
 struct va *find_var(struct token *tok);
 struct node *new_unary(enum node_kind k, struct node *n, struct token *tok);
@@ -116,7 +117,7 @@ char *new_label();
 struct va *push_var(char *name, struct typ *ty, bool is_local);
 struct node *primary();
 struct node *func_args();
-struct node* post_fix();
+struct node *post_fix();
 struct node *unary();
 struct node *mul();
 struct node *add();
@@ -131,10 +132,9 @@ struct node *declaration();
 void global_var();
 struct fun *function();
 struct typ *base_type();
-struct typ *read_type_suffix(struct typ* b);
-struct var_list* read_func_params();
+struct typ *read_type_suffix(struct typ *b);
+struct var_list *read_func_params();
 bool is_function();
 struct program *prog();
-
 
 #endif /* PARSER_H */

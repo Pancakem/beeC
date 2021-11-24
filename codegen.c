@@ -2,12 +2,13 @@
 #include "type.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 int label_seq = 0;
 char *arg_reg8[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 char *arg_reg1[] = {"dil", "sil", "dl", "cl", "r8b", "r9b"};
+char *func_name = "";
 
 void gen_addr(struct node *nd) {
   struct va *v = (struct va *)malloc(sizeof(struct va));
@@ -40,9 +41,11 @@ void gen_lval(struct node *nd) {
 
 void load(struct typ *ty) {
   printf(" pop rax\n");
-  if (size_of(ty) == 1) puts(" movsx rax, byte ptr [rax]\n");
-  else puts(" mov rax, [rax]\n");
-  puts(" push rax\n");  
+  if (size_of(ty) == 1)
+    puts(" movsx rax, byte ptr [rax]\n");
+  else
+    puts(" mov rax, [rax]\n");
+  puts(" push rax\n");
 }
 
 void store(struct typ *ty) {
