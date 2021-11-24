@@ -251,11 +251,17 @@ struct token *tokenize(char *p) {
     }
 
     if (is_reserved(c)) {
-      char *q = (char *)malloc(sizeof(char) + 1);
-      strncpy(q, p + pos, 1 + 1);
-      q[1] = '\0';
+      // check if is composite (<=, >=)
+      int len = 1;
+      if (p[pos + 1] == '=' || p[pos + 1] == '=') {
+        len++;
+      }
+
+      char *q = (char *)malloc(sizeof(char) * (len + 1));
+      strncpy(q, p + pos, len + 1);
+      q[len] = '\0';
       cur = new_token(tk_reserved, cur, q, 1);
-      pos++;
+      pos += len;
       continue;
     }
 

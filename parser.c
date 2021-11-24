@@ -182,6 +182,11 @@ struct node *primary() {
     return new_var(v, tok);
   }
 
+  // ADDED
+  if (tok->kind == tk_ident) {
+    t = t->next;
+  }
+
   if (tok->kind != tk_num) {
     error_tok(tok, "expected expression");
   }
