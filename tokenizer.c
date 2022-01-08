@@ -7,7 +7,7 @@
 char *inpt = 0;
 char *filename = 0;
 int pos = 0;
-struct token *t = NULL;
+token_t *t = NULL;
 
 void error_at(char *loc, char *err_str) {
   char *k = inpt;
@@ -38,7 +38,7 @@ void error_at(char *loc, char *err_str) {
   exit(1);
 }
 
-void error_tok(struct token *tok, char *f) {
+void error_tok(token_t *tok, char *f) {
   if (tok != NULL)
     error_at(tok->str, f);
 
@@ -50,20 +50,20 @@ bool peek(char *s) {
   return ((strlen(s) == t->len) && strncmp(t->str, s, t->len) == 0);
 }
 
-struct token *consume(char *op) {
+token_t *consume(char *op) {
   if (!peek(op))
     return NULL;
 
-  struct token *tok = t;
+  token_t *tok = t;
   t = tok->next;
   return tok;
 }
 
-struct token *consume_ident() {
+token_t *consume_ident() {
   if (t->kind != tk_ident)
     return NULL;
 
-  struct token *tt = t;
+  token_t *tt = t;
   t = tt->next;
   return tt;
 }
@@ -97,9 +97,8 @@ char *expect_ident() {
 
 bool at_eof() { return t->kind == tk_eof; }
 
-struct token *new_token(enum token_kind k, struct token *cur, char *str,
-                        unsigned long len) {
-  struct token *p = (struct token *)malloc(sizeof(struct token));
+token_t *new_token(token_kind_t k, token_t *cur, char *str, unsigned long len) {
+  token_t *p = (token_t *)malloc(sizeof(token_t));
   p->kind = k;
   p->str = str;
   p->len = len;
@@ -184,7 +183,7 @@ char get_escape_char(char c) {
   return c;
 }
 
-struct token *read_str_literal(struct token *cur, char *p) {
+token_t *read_str_literal(token_t *cur, char *p) {
   int len = strlen(p);
   char s[len + 1];
   strncpy(s, p, len);
@@ -212,7 +211,7 @@ struct token *read_str_literal(struct token *cur, char *p) {
     l++;
   }
 
-  struct token *tok =
+  token_t *tok =
       new_token(tk_str, cur, s, strlen(s) - strlen(p + curr_pos) + 1);
   char c = 0;
   strncat(r, &c, 1);
@@ -225,10 +224,10 @@ struct token *read_str_literal(struct token *cur, char *p) {
   return tok;
 }
 
-struct token *tokenize(char *p) {
-  struct token h;
+token_t *tokenize(char *p) {
+  token_t h;
   h.next = NULL;
-  struct token *cur = &h;
+  token_t *cur = &h;
 
   while (strlen(p + pos) > 0) {
     char c = p[pos];
@@ -329,7 +328,7 @@ struct token *tokenize(char *p) {
   return h.next;
 }
 
-void free_token(struct token *value) {
+void free_token(token_t *value) {
   void *anode;
 
   while (value != NULL) {

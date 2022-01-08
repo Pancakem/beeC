@@ -10,8 +10,8 @@ char *arg_reg8[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 char *arg_reg1[] = {"dil", "sil", "dl", "cl", "r8b", "r9b"};
 char *func_name = "";
 
-void gen_addr(struct node *nd) {
-  struct va *v = (struct va *)malloc(sizeof(struct va));
+void gen_addr(node_t *nd) {
+  va_t *v = (va_t *)malloc(sizeof(va_t));
   switch (nd->kind) {
   case nd_var:
     v = nd->v;
@@ -32,7 +32,7 @@ void gen_addr(struct node *nd) {
   error_tok(nd->tok, "not an lvalue");
 }
 
-void gen_lval(struct node *nd) {
+void gen_lval(node_t *nd) {
   if (nd->ty->kind == ty_array)
     error_tok(nd->tok, "not an lvalue");
 
@@ -58,7 +58,7 @@ void store(struct typ *ty) {
   puts(" push rdi\n");
 }
 
-void gen(struct node *n) {
+void gen(node_t *n) {
   int seq = 0;
   int c = 0;
   switch (n->kind) {
@@ -142,12 +142,12 @@ void gen(struct node *n) {
     printf(".Lend%d:\n", seq);
     return;
   case nd_block:
-    for (struct node *b = n->body; b != NULL; b = b->next)
+    for (node_t *b = n->body; b != NULL; b = b->next)
       gen(b);
     return;
   case nd_func_call:
     c = 0;
-    for (struct node *arg = n->args; arg != NULL; arg = arg->next) {
+    for (node_t *arg = n->args; arg != NULL; arg = arg->next) {
       gen(arg);
       c++;
     }
@@ -224,10 +224,10 @@ void gen(struct node *n) {
   printf(" push rax\n");
 }
 
-void emit_data(struct program *p) {
+void emit_data(program_t *p) {
   puts(".data\n");
-  for (struct var_list *vl = p->globals; vl != NULL; vl = vl->next) {
-    struct va *v = vl->v;
+  for (var_list_t *vl = p->globals; vl != NULL; vl = vl->next) {
+    va_t *v = vl->v;
     printf("%s:\n", v->name);
     if (v->contents != NULL) {
       for (int i = 0; i < strlen(v->contents); ++i)
@@ -237,7 +237,7 @@ void emit_data(struct program *p) {
   }
 }
 
-void load_arg(struct va *v, int idx) {
+void load_arg(va_t *v, int idx) {
   int sz = size_of(v->ty);
   if (sz == 1)
     printf(" mov [rbp-%d], %s\n", v->offset, arg_reg1[idx]);
@@ -245,7 +245,7 @@ void load_arg(struct va *v, int idx) {
     printf(" mov [rbp-%d], %s\n", v->offset, arg_reg8[idx]);
 }
 
-void emit_text(struct program *prog) {
+void emit_text(program_t *prog) {
   puts(".text\n");
   for (struct fun *fn = prog->fns; fn != NULL; fn = fn->next) {
     printf(".global %s\n", fn->name);
@@ -255,11 +255,11 @@ void emit_text(struct program *prog) {
     printf(" mov rbp, rsp\n");
     printf(" sub rsp, %d\n", fn->stack_size);
     int i = 0;
-    for (struct var_list *vl = fn->params; vl != NULL; vl = vl->next) {
+    for (var_list_t *vl = fn->params; vl != NULL; vl = vl->next) {
       load_arg(vl->v, i);
       i++;
     }
-    for (struct node *n = fn->node; n != NULL; n = n->next) {
+    for (node_t *n = fn->node; n != NULL; n = n->next) {
       gen(n);
     }
     printf(".Lreturn.%s:\n", func_name);
@@ -269,7 +269,7 @@ void emit_text(struct program *prog) {
   }
 }
 
-void codegen(struct program *prog) {
+void codegen(program_t *prog) {
   puts(".intel_syntax noprefix\n");
   emit_data(prog);
   emit_text(prog);

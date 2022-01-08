@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "tokenizer.h"
+#include "type.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,15 +8,13 @@
 #include <string.h>
 
 int label_count = 0;
-struct var_list *locals;
-struct var_list *globals;
+var_list_t *locals;
+var_list_t *globals;
 
-void init_node(struct node *init_node, enum node_kind kind, struct node *next,
-               struct typ *ty, struct token *tok, struct node *lhs,
-               struct node *rhs, struct node *cond, struct node *then,
-               struct node *els, struct node *init, struct node *inc,
-               struct node *body, char *func_name, struct node *args,
-               struct va *v, int val) {
+void init_node(node_t *init_node, node_kind_t kind, node_t *next, typ_t *ty,
+               token_t *tok, node_t *lhs, node_t *rhs, node_t *cond,
+               node_t *then, node_t *els, node_t *init, node_t *inc,
+               node_t *body, char *func_name, node_t *args, va_t *v, int val) {
 
   init_node->kind = kind;
   init_node->next = next;
@@ -35,8 +34,8 @@ void init_node(struct node *init_node, enum node_kind kind, struct node *next,
   init_node->val = val;
 }
 
-void init_va(struct va *v, char *name, struct typ *ty, bool is_local,
-             char *contents, int content_len, int offset) {
+void init_va(va_t *v, char *name, typ_t *ty, bool is_local, char *contents,
+             int content_len, int offset) {
   v->name = name;
   v->ty = ty;
   v->is_local = is_local;
@@ -45,21 +44,19 @@ void init_va(struct va *v, char *name, struct typ *ty, bool is_local,
   v->offset = offset;
 }
 
-void init_type(struct typ *ty, enum type_kind kind, struct typ *base,
-               int array_size) {
+void init_type(typ_t *ty, type_kind_t kind, typ_t *base, int array_size) {
   ty->kind = kind;
   ty->base = base;
   ty->array_size = array_size;
 }
 
-void init_var_list(struct var_list *vl, struct var_list *next, struct va *v) {
+void init_var_list(var_list_t *vl, var_list_t *next, va_t *v) {
   vl->next = next;
   vl->v = v;
 }
 
-void init_function(struct fun *fn, struct fun *next, char *name,
-                   struct var_list *params, struct node *nde,
-                   struct var_list *locals, int stack_size) {
+void init_function(fun_t *fn, fun_t *next, char *name, var_list_t *params,
+                   node_t *nde, var_list_t *locals, int stack_size) {
   fn->next = next;
   fn->name = name;
   fn->params = params;
@@ -68,9 +65,9 @@ void init_function(struct fun *fn, struct fun *next, char *name,
   fn->stack_size = stack_size;
 }
 
-struct va *find_var(struct token *tok) {
-  struct var_list *vl = locals;
-  struct va *v;
+va_t *find_var(token_t *tok) {
+  var_list_t *vl = locals;
+  va_t *v;
   while (vl != NULL) {
     v = vl->v;
     if (strlen(v->name) == tok->len && strncmp(tok->str, v->name, tok->len)) {
@@ -91,30 +88,29 @@ struct va *find_var(struct token *tok) {
   return NULL;
 }
 
-struct node *new_unary(enum node_kind k, struct node *n, struct token *tok) {
-  struct node *nd = (struct node *)malloc(sizeof(struct node));
+node_t *new_unary(node_kind_t k, node_t *n, token_t *tok) {
+  node_t *nd = (node_t *)malloc(sizeof(node_t));
   init_node(nd, k, NULL, NULL, tok, n, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
             NULL, NULL, NULL, 0);
   return nd;
 }
 
-struct node *new_binary(enum node_kind k, struct node *lhs, struct node *rhs,
-                        struct token *tok) {
-  struct node *n = (struct node *)malloc(sizeof(struct node));
+node_t *new_binary(node_kind_t k, node_t *lhs, node_t *rhs, token_t *tok) {
+  node_t *n = (node_t *)malloc(sizeof(node_t));
   init_node(n, k, NULL, NULL, tok, lhs, rhs, NULL, NULL, NULL, NULL, NULL, NULL,
             NULL, NULL, NULL, 0);
   return n;
 }
 
-struct node *new_number(int v, struct token *tok) {
-  struct node *n = (struct node *)malloc(sizeof(struct node));
+node_t *new_number(int v, token_t *tok) {
+  node_t *n = (node_t *)malloc(sizeof(node_t));
   init_node(n, nd_num, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
             NULL, NULL, NULL, NULL, NULL, v);
   return n;
 }
 
-struct node *new_var(struct va *v, struct token *tok) {
-  struct node *n = (struct node *)malloc(sizeof(struct node));
+node_t *new_var(va_t *v, token_t *tok) {
+  node_t *n = (node_t *)malloc(sizeof(node_t));
   init_node(n, nd_var, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
             NULL, NULL, NULL, NULL, v, 0);
   return n;
@@ -126,11 +122,11 @@ char *new_label() {
   return name;
 }
 
-struct va *push_var(char *name, struct typ *ty, bool is_local) {
-  struct va *v = (struct va *)malloc(sizeof(struct va));
+va_t *push_var(char *name, typ_t *ty, bool is_local) {
+  va_t *v = (va_t *)malloc(sizeof(va_t));
   init_va(v, name, ty, is_local, NULL, 0, 0);
 
-  struct var_list vl = {.v = v};
+  var_list_t vl = {.v = v};
 
   if (is_local) {
     vl.next = locals;
@@ -142,14 +138,14 @@ struct va *push_var(char *name, struct typ *ty, bool is_local) {
   return v;
 }
 
-struct node *primary() {
+node_t *primary() {
   if (consume("(") != NULL) {
-    struct node *n = expr();
+    node_t *n = expr();
     expect(")");
     return n;
   }
 
-  struct token *tok = consume("sizeof");
+  token_t *tok = consume("sizeof");
   if (tok != NULL) {
     return new_unary(nd_sizeof, unary(), tok);
   }
@@ -157,13 +153,13 @@ struct node *primary() {
   tok = consume_ident();
   if (tok != NULL) {
     if (consume("(") == NULL) {
-      struct node *n = (struct node *)malloc(sizeof(struct node));
+      node_t *n = (node_t *)malloc(sizeof(node_t));
       init_node(n, nd_func_call, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL,
                 NULL, NULL, NULL, tok->str, func_args(), NULL, 0);
       return n;
     }
 
-    struct va *v = find_var(tok);
+    va_t *v = find_var(tok);
     if (v == NULL) {
       error_tok(tok, "undefined variable");
     }
@@ -174,16 +170,16 @@ struct node *primary() {
 
   if (tok->kind == tk_str) {
     t = t->next;
-    struct typ *cty = char_type();
-    struct typ *ty = array_of(cty, tok->content_length);
-    struct va *v = push_var(new_label(), ty, false);
+    typ_t *cty = char_type();
+    typ_t *ty = array_of(cty, tok->content_length);
+    va_t *v = push_var(new_label(), ty, false);
     v->contents = tok->contents;
     v->content_length = tok->content_length;
     return new_var(v, tok);
-  }
-
-  // ADDED
-  if (tok->kind == tk_ident) {
+  } else if (tok->kind == tk_ident) {
+    t = t->next;
+    return relational();
+  } else if (tok->kind == tk_reserved) {
     t = t->next;
     return relational();
   }
@@ -195,13 +191,13 @@ struct node *primary() {
   return new_number(expect_number(), tok);
 }
 
-struct node *func_args() {
-  struct token *tok;
+node_t *func_args() {
+  token_t *tok;
   if ((tok = consume(")")) != NULL)
     return NULL;
 
-  struct node *h = assign();
-  struct node *cur = h;
+  node_t *h = assign();
+  node_t *cur = h;
   tok = consume(",");
   while (tok != NULL) {
     cur->next = assign();
@@ -211,21 +207,21 @@ struct node *func_args() {
   return h;
 }
 
-struct node *post_fix() {
-  struct node *n = primary();
-  for (struct token *tok = consume("["); tok != NULL; tok = consume("[")) {
-    struct node *exp = new_binary(nd_add, n, expr(), tok);
+node_t *post_fix() {
+  node_t *n = primary();
+  for (token_t *tok = consume("["); tok != NULL; tok = consume("[")) {
+    node_t *exp = new_binary(nd_add, n, expr(), tok);
     expect("]");
     n = new_unary(nd_deref, exp, tok);
   }
   return n;
 }
 
-struct node *unary() {
+node_t *unary() {
   if (consume("+") != NULL)
     return unary();
 
-  struct token *tok;
+  token_t *tok;
   if ((tok = consume("-")) != NULL)
     return new_binary(nd_sub, new_number(0, tok), unary(), tok);
   if ((tok = consume("&")) != NULL)
@@ -236,9 +232,9 @@ struct node *unary() {
   return post_fix();
 }
 
-struct node *mul() {
-  struct node *n = unary();
-  struct token *tok;
+node_t *mul() {
+  node_t *n = unary();
+  token_t *tok;
   while (true) {
     if ((tok = consume("*")) != NULL)
       n = new_binary(nd_mul, n, unary(), tok);
@@ -249,9 +245,9 @@ struct node *mul() {
   }
 }
 
-struct node *add() {
-  struct node *n = mul();
-  struct token *tok;
+node_t *add() {
+  node_t *n = mul();
+  token_t *tok;
   while (true) {
     if ((tok = consume("+")) != NULL)
       n = new_binary(nd_add, n, mul(), tok);
@@ -262,9 +258,9 @@ struct node *add() {
   }
 }
 
-struct node *relational() {
-  struct node *n = add();
-  struct token *tok;
+node_t *relational() {
+  node_t *n = add();
+  token_t *tok;
   while (true) {
     if ((tok = consume("<")) != NULL)
       n = new_binary(nd_lt, n, add(), tok);
@@ -279,9 +275,9 @@ struct node *relational() {
   }
 }
 
-struct node *equality() {
-  struct node *n = relational();
-  struct token *tok;
+node_t *equality() {
+  node_t *n = relational();
+  token_t *tok;
   while (true) {
     if ((tok = consume("==")) != NULL)
       n = new_binary(nd_eq, n, relational(), tok);
@@ -292,29 +288,27 @@ struct node *equality() {
   }
 }
 
-struct node *assign() {
-  struct node *n = equality();
-  struct token *tok = consume("=");
+node_t *assign() {
+  node_t *n = equality();
+  token_t *tok = consume("=");
   if (tok != NULL)
     n = new_binary(nd_assign, n, assign(), tok);
 
   return n;
 }
 
-struct node *expr() {
-  return assign();
-}
+node_t *expr() { return assign(); }
 
-struct node *stmt() {
-  struct token *tok;
+node_t *stmt() {
+  token_t *tok;
   if ((tok = consume("return")) != NULL) {
-    struct node *n = new_unary(nd_ret, expr(), tok);
+    node_t *n = new_unary(nd_ret, expr(), tok);
     expect(";");
     return n;
   }
 
   if ((tok = consume("if")) != NULL) {
-    struct node *n = (struct node *)malloc(sizeof(struct node));
+    node_t *n = (node_t *)malloc(sizeof(node_t));
     init_node(n, nd_if, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
               NULL, NULL, NULL, NULL, NULL, 0);
     expect("(");
@@ -327,7 +321,7 @@ struct node *stmt() {
   }
 
   if ((tok = consume("while")) != NULL) {
-    struct node *n = (struct node *)malloc(sizeof(struct node));
+    node_t *n = (node_t *)malloc(sizeof(node_t));
     init_node(n, nd_while, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
               NULL, NULL, NULL, NULL, NULL, 0);
     expect("(");
@@ -338,7 +332,7 @@ struct node *stmt() {
   }
 
   if ((tok = consume("for")) != NULL) {
-    struct node *n = (struct node *)malloc(sizeof(struct node));
+    node_t *n = (node_t *)malloc(sizeof(node_t));
     init_node(n, nd_for, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
               NULL, NULL, NULL, NULL, NULL, 0);
 
@@ -360,13 +354,13 @@ struct node *stmt() {
   }
 
   if ((tok = consume("{")) != NULL) {
-    struct node h;
-    struct node *current = &h;
+    node_t h;
+    node_t *current = &h;
     while (consume("}") == NULL) {
       current->next = stmt();
       current = current->next;
     }
-    struct node *n = (struct node *)malloc(sizeof(struct node));
+    node_t *n = (node_t *)malloc(sizeof(node_t));
     init_node(n, nd_block, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
               NULL, h.next, NULL, NULL, NULL, 0);
     return n;
@@ -375,58 +369,58 @@ struct node *stmt() {
   if (is_type_name())
     return declaration();
 
-  struct node *n = read_expr_stmt();
+  node_t *n = read_expr_stmt();
   expect(";");
   return n;
 }
 
 bool is_type_name() { return peek("char") || peek("int"); }
 
-struct node *read_expr_stmt() {
-  struct token *tt = t;
+node_t *read_expr_stmt() {
+  token_t *tt = t;
   return new_unary(nd_expr_stmt, expr(), tt);
 }
 
-struct node *declaration() {
-  struct token *tok = t;
-  struct typ *ty = base_type();
+node_t *declaration() {
+  token_t *tok = t;
+  typ_t *ty = base_type();
   char *name = expect_ident();
   ty = read_type_suffix(ty);
-  struct va *v = push_var(name, ty, true);
+  va_t *v = push_var(name, ty, true);
   if (consume(";") != NULL) {
-    struct node *nd = (struct node *)malloc(sizeof(struct node));
+    node_t *nd = (node_t *)malloc(sizeof(node_t));
     init_node(nd, nd_null, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
               NULL, NULL, NULL, NULL, NULL, 0);
     return nd;
   }
   expect("=");
-  struct node *lhs = (struct node *)malloc(sizeof(struct node));
+  node_t *lhs = (node_t *)malloc(sizeof(node_t));
   init_node(lhs, nd_var, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
             NULL, NULL, NULL, NULL, NULL, 0);
-  struct node *rhs = expr();
+  node_t *rhs = expr();
   expect(";");
-  struct node *n = new_binary(nd_assign, lhs, rhs, tok);
+  node_t *n = new_binary(nd_assign, lhs, rhs, tok);
   return new_unary(nd_expr_stmt, n, tok);
 }
 
 void global_var() {
-  struct typ *ty = base_type();
+  typ_t *ty = base_type();
   char *name = expect_ident();
   ty = read_type_suffix(ty);
   expect(";");
   push_var(name, ty, false);
 }
 
-struct fun *function() {
+fun_t *function() {
   locals = NULL;
   base_type();
-  struct fun *fn = (struct fun *)malloc(sizeof(struct fun));
+  fun_t *fn = (fun_t *)malloc(sizeof(fun_t));
   init_function(fn, NULL, expect_ident(), NULL, NULL, NULL, NULL);
   expect("(");
   fn->params = read_func_params();
   expect("{");
-  struct node h;
-  struct node *current = &h;
+  node_t h;
+  node_t *current = &h;
   while (consume("}") == NULL) {
     current->next = stmt();
     current = current->next;
@@ -436,8 +430,8 @@ struct fun *function() {
   return fn;
 }
 
-struct typ *base_type() {
-  struct typ *ty = (struct typ *)malloc(sizeof(struct typ));
+typ_t *base_type() {
+  typ_t *ty = (typ_t *)malloc(sizeof(typ_t));
   if (consume("char") != NULL)
     ty = char_type();
   else {
@@ -449,7 +443,7 @@ struct typ *base_type() {
   return ty;
 }
 
-struct typ *read_type_suffix(struct typ *b) {
+typ_t *read_type_suffix(typ_t *b) {
   if (consume("[") == NULL)
     return b;
   int arr_size = expect_number();
@@ -458,22 +452,22 @@ struct typ *read_type_suffix(struct typ *b) {
   return array_of(b, arr_size);
 }
 
-struct var_list *read_func_param() {
-  struct typ *ty = base_type();
+var_list_t *read_func_param() {
+  typ_t *ty = base_type();
   char *name = expect_ident();
   ty = read_type_suffix(ty);
 
-  struct var_list *res = (struct var_list *)malloc(sizeof(struct var_list));
+  var_list_t *res = (var_list_t *)malloc(sizeof(var_list_t));
   init_var_list(res, NULL, push_var(name, ty, true));
   return res;
 }
 
-struct var_list *read_func_params() {
+var_list_t *read_func_params() {
   if (consume(")") != NULL)
     return NULL;
 
-  struct var_list *h = read_func_param();
-  struct var_list *current = h;
+  var_list_t *h = read_func_param();
+  var_list_t *current = h;
 
   while (consume(")") == NULL) {
     expect(",");
@@ -484,7 +478,7 @@ struct var_list *read_func_params() {
 }
 
 bool is_function() {
-  struct token *tok = t;
+  token_t *tok = t;
   base_type();
   bool is_ident = consume_ident() != NULL;
   bool is_func_open = consume("(") != NULL;
@@ -492,9 +486,9 @@ bool is_function() {
   return is_ident && is_func_open;
 }
 
-struct program *prog() {
-  struct fun h;
-  struct fun *current = &h;
+program_t *prog() {
+  fun_t h;
+  fun_t *current = &h;
 
   globals = NULL;
   while (!at_eof()) {
@@ -506,7 +500,7 @@ struct program *prog() {
       global_var();
   }
 
-  struct program *pg = (struct program *)malloc(sizeof(struct program));
+  program_t *pg = (program_t *)malloc(sizeof(program_t));
   pg->globals = globals;
   pg->fns = h.next;
   return pg;

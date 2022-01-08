@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
   strcpy(inpt, buffer);
   t = tokenize(buffer);
 
-  struct token *temp = t;
+  token_t *temp = t;
 
   while (t != NULL) {
     if (t->len == 0) {
@@ -49,18 +49,18 @@ int main(int argc, char **argv) {
 
   t = temp;
 
-  struct program *p = prog();
+  program_t *p = prog();
   add_type(p);
-  for (struct fun *fn = p->fns; fn != NULL; fn = fn->next) {
+  for (fun_t *fn = p->fns; fn != NULL; fn = fn->next) {
     int ot = 0;
-    for (struct var_list *vl = fn->locals; vl != NULL; vl = vl->next) {
-      struct va *v = vl->v;
+    for (var_list_t *vl = fn->locals; vl != NULL; vl = vl->next) {
+      va_t *v = vl->v;
       ot += size_of(v->ty);
       vl->v->offset = ot;
     }
     fn->stack_size = align_to(ot, 8);
+    printf("%c", fn->stack_size);
   }
-
   /* codegen(p); */
   /* free_token(t); */
   /* free(p); */

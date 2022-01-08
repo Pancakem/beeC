@@ -1,30 +1,30 @@
 #include "type.h"
 
-struct typ *char_type() {
-  struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
+typ_t *char_type() {
+  typ_t *tp = (typ_t *)malloc(sizeof(typ_t));
   init_type(tp, ty_char, NULL, 0);
   return tp;
 }
 
-struct typ *int_type() {
-  struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
+typ_t *int_type() {
+  typ_t *tp = (typ_t *)malloc(sizeof(typ_t));
   init_type(tp, ty_int, NULL, 0);
   return tp;
 }
 
-struct typ *pointer_to(struct typ *b) {
-  struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
+typ_t *pointer_to(typ_t *b) {
+  typ_t *tp = (typ_t *)malloc(sizeof(typ_t));
   init_type(tp, ty_ptr, b, 0);
   return tp;
 }
 
-struct typ *array_of(struct typ *b, int s) {
-  struct typ *tp = (struct typ *)malloc(sizeof(struct typ));
+typ_t *array_of(typ_t *b, int s) {
+  typ_t *tp = (typ_t *)malloc(sizeof(typ_t));
   init_type(tp, ty_array, b, s);
   return tp;
 }
 
-int size_of(struct typ *ty) {
+int size_of(typ_t *ty) {
   switch (ty->kind) {
   case ty_char:
     return 1;
@@ -35,7 +35,7 @@ int size_of(struct typ *ty) {
   return size_of(ty->base) * ty->array_size;
 }
 
-void visit(struct node *n) {
+void visit(node_t *n) {
   if (n == NULL)
     return;
 
@@ -47,19 +47,19 @@ void visit(struct node *n) {
   visit(n->init);
   visit(n->inc);
 
-  struct node *b = n->body;
+  node_t *b = n->body;
   while (b != NULL) {
     visit(b);
     b = b->next;
   }
 
-  struct node *a = n->args;
+  node_t *a = n->args;
   while (a != NULL) {
     visit(a);
     a = a->next;
   }
 
-  struct node *tmp;
+  node_t *tmp;
   switch (n->kind) {
   case nd_mul:
   case nd_div:
@@ -114,11 +114,11 @@ void visit(struct node *n) {
   }
 }
 
-void add_type(struct program *p) {
-  struct fun *fn = p->fns;
+void add_type(program_t *p) {
+  fun_t *fn = p->fns;
 
   while (fn != NULL) {
-    struct node *n = fn->node;
+    node_t *n = fn->node;
     while (n != NULL) {
       visit(n);
       n = n->next;

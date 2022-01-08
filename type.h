@@ -5,10 +5,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-struct typ *char_type();
-struct typ *int_type();
-struct typ *pointer_to(struct typ *b);
-struct typ *array_of(struct typ *b, int s);
-int size_of(struct typ *ty);
+typ_t *char_type();
+typ_t *int_type();
+typ_t *pointer_to(typ_t *b);
+typ_t *array_of(typ_t *b, int s);
+int size_of(typ_t *ty);
 
 #endif /* TYPE_H */
