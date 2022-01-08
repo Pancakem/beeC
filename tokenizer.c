@@ -265,16 +265,16 @@ struct token *tokenize(char *p) {
 
     if (is_reserved(c)) {
       // check if is composite (<=, >=)
-      int len = 1;
-      if (p[pos + 1] == '=' || p[pos + 1] == '=') {
-        len++;
+      int sze = 1;
+      if (p[pos + 1] == '=') {
+        sze++;
       }
 
-      char *q = (char *)malloc(sizeof(char) * (len + 1));
-      strncpy(q, p + pos, len + 1);
-      q[len] = '\0';
-      cur = new_token(tk_reserved, cur, q, 1);
-      pos += len;
+      char *q = (char *)malloc(sizeof(char) * sze);
+      strncpy(q, p + pos, sze);
+      q[sze] = '\0';
+      cur = new_token(tk_reserved, cur, q, sze);
+      pos += sze;
       continue;
     }
 
