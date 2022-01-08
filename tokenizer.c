@@ -12,16 +12,29 @@ struct token *t = NULL;
 void error_at(char *loc, char *err_str) {
   char *k = inpt;
   int line = 1;
+  int col = 0;
   while (strlen(k) > 0) {
-    if (k[0] == '\n') {
+    if (*k == '\n') {
       line++;
+      col = 0;
+    } else if (*k == *loc) {
+      break;
     }
+    col++;
     k++;
   }
 
-  printf("%s:%d: error: %s\n", filename, line, err_str);
-  printf("%s\n", loc);
-  printf("^ \n");
+  printf("%s:%d:%d error: %s\n", filename, line, col, err_str);
+  char *error_line = (k - col + 1);
+  printf("%c", *error_line);
+  while (*error_line != '\n') {
+    printf("\033[0;31m%c", *error_line);
+    error_line += 1;
+  }
+  puts("\n");
+  // print n spaces
+  printf("%*c", col, ' ');
+  printf("\033[0m^\n");
   exit(1);
 }
 

@@ -185,6 +185,7 @@ struct node *primary() {
   // ADDED
   if (tok->kind == tk_ident) {
     t = t->next;
+    return relational();
   }
 
   if (tok->kind != tk_num) {
