@@ -4,9 +4,21 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef enum { tk_reserved = 0, tk_ident, tk_str, tk_num, tk_eof } token_kind_t;
+typedef enum { tk_reserved, tk_ident, tk_str, tk_num, tk_eof } token_kind_t;
+// for token_kind_t type safety
+typedef union {
+  token_kind_t tk_reserved;
+  token_kind_t tk_str;
+  token_kind_t tk_ident;
+  token_kind_t tk_num;
+  token_kind_t tk_eof;
+} typesafe_token_kind_t;
 
-typedef struct {
+#define token_kind_assign(var, val)                                            \
+  _Generic((var), token_kind_t                                                 \
+           : (var) = (typesafe_token_kind_t){.val = val}.val)
+
+typedef struct token {
   token_kind_t kind;
   struct token *next;
   int val;

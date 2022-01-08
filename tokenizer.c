@@ -257,7 +257,9 @@ token_t *tokenize(char *p) {
     char *keyword = starts_with_reserved(p + pos);
     if (keyword != NULL) {
       int len = strlen(keyword);
-      cur = new_token(tk_reserved, cur, keyword, len);
+      token_kind_t t_kind;
+      token_kind_assign(t_kind, tk_reserved);
+      cur = new_token(t_kind, cur, keyword, len);
       pos += len;
       continue;
     }
@@ -272,7 +274,9 @@ token_t *tokenize(char *p) {
       char *q = (char *)malloc(sizeof(char) * sze);
       strncpy(q, p + pos, sze);
       q[sze] = '\0';
-      cur = new_token(tk_reserved, cur, q, sze);
+      token_kind_t t_kind;
+      token_kind_assign(t_kind, tk_reserved);
+      cur = new_token(t_kind, cur, q, sze);
       pos += sze;
       continue;
     }
@@ -290,7 +294,9 @@ token_t *tokenize(char *p) {
       strncpy(q, p + start_pos, len - new_len);
       q[len - new_len] = '\0';
 
-      cur = new_token(tk_ident, cur, q, len - new_len);
+      token_kind_t t_kind;
+      token_kind_assign(t_kind, tk_ident);
+      cur = new_token(t_kind, cur, q, len - new_len);
       continue;
     }
 
@@ -311,7 +317,10 @@ token_t *tokenize(char *p) {
       char *q = (char *)malloc(sizeof(char) * (len - new_len));
       strncpy(q, p + start_pos, len - new_len);
       q[len - new_len] = '\0';
-      cur = new_token(tk_num, cur, q, 0);
+
+      token_kind_t t_kind;
+      token_kind_assign(t_kind, tk_num);
+      cur = new_token(t_kind, cur, q, 0);
 
       int v = atoi(q);
 

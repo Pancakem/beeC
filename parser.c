@@ -139,6 +139,7 @@ va_t *push_var(char *name, typ_t *ty, bool is_local) {
 }
 
 node_t *primary() {
+  printf("%s\n", t->str);
   if (consume("(") != NULL) {
     node_t *n = expr();
     expect(")");
@@ -176,18 +177,17 @@ node_t *primary() {
     v->contents = tok->contents;
     v->content_length = tok->content_length;
     return new_var(v, tok);
-  } else if (tok->kind == tk_ident) {
-    t = t->next;
-    return relational();
-  } else if (tok->kind == tk_reserved) {
-    t = t->next;
-    return relational();
   }
 
-  if (tok->kind != tk_num) {
-    error_tok(tok, "expected expression");
-  }
+  /* if (tok->kind == tk_ident) { */
+  /*   t = t->next; */
+  /*   return relational(); */
+  /* } */
 
+  /* } else if (tok->kind == tk_reserved) { */
+  /*   t = t->next; */
+  /*   return relational(); */
+  /* } */
   return new_number(expect_number(), tok);
 }
 
@@ -396,7 +396,7 @@ node_t *declaration() {
   expect("=");
   node_t *lhs = (node_t *)malloc(sizeof(node_t));
   init_node(lhs, nd_var, NULL, NULL, tok, NULL, NULL, NULL, NULL, NULL, NULL,
-            NULL, NULL, NULL, NULL, NULL, 0);
+            NULL, NULL, NULL, NULL, v, 0);
   node_t *rhs = expr();
   expect(";");
   node_t *n = new_binary(nd_assign, lhs, rhs, tok);
@@ -415,7 +415,7 @@ fun_t *function() {
   locals = NULL;
   base_type();
   fun_t *fn = (fun_t *)malloc(sizeof(fun_t));
-  init_function(fn, NULL, expect_ident(), NULL, NULL, NULL, NULL);
+  init_function(fn, NULL, expect_ident(), NULL, NULL, NULL, 0);
   expect("(");
   fn->params = read_func_params();
   expect("{");
