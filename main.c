@@ -17,6 +17,7 @@ char *read_file(const char *file_path) {
   fseek(fle, 0, SEEK_SET);
   char *buffer = (char *)malloc(sizeof(char) * size + 1);
   fread(buffer, 1, size, fle);
+  buffer[size] = '\0';
   fclose(fle);
   return buffer;
 }
@@ -59,10 +60,9 @@ int main(int argc, char **argv) {
       vl->v->offset = ot;
     }
     fn->stack_size = align_to(ot, 8);
-    printf("%c", fn->stack_size);
   }
-  /* codegen(p); */
-  /* free_token(t); */
-  /* free(p); */
+  codegen(p);
+  free_token(t);
+  free(p);
   return 0;
 }

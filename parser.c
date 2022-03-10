@@ -495,7 +495,6 @@ program_t *prog() {
     if (is_function()) {
       current->next = function();
       current = current->next;
-      printf("Found function %s\n", current->next->name);
     } else
       global_var();
   }

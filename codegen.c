@@ -59,6 +59,10 @@ void store(struct typ *ty) {
 }
 
 void gen(node_t *n) {
+  // check null
+  if (n == NULL) {
+    return;
+  }
   int seq = 0;
   int c = 0;
   switch (n->kind) {
@@ -230,7 +234,7 @@ void emit_data(program_t *p) {
     va_t *v = vl->v;
     printf("%s:\n", v->name);
     if (v->contents != NULL) {
-      for (int i = 0; i < strlen(v->contents); ++i)
+      for (unsigned long i = 0; i < strlen(v->contents); ++i)
         printf(" .byte %d\n", v->contents[i]);
     } else
       printf(" .zero %d\n", size_of(v->ty));

@@ -2,3 +2,4 @@ compiler
 peda-session-compiler.txt
 test.c
 .gdb_history
+compiler.dSYM/
